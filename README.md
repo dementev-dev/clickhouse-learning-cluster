@@ -1,1 +1,1 @@
-# dlickhouse-learning-cluster
+# clickhouse-learning-cluster

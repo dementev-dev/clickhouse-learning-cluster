@@ -1,0 +1,94 @@
+x-configs: &ch-default-configs
+  image: clickhouse/clickhouse-server:25.1
+  environment:
+      TZ: "Europe/Moscow"
+  ulimits:
+    nproc: 65535
+    nofile:
+      soft: 262144
+      hard: 262144
+  networks:
+    - ch_learning_net
+  depends_on:
+    - zookeeper
+    
+services:
+  zookeeper:
+    # image: 'bitnami/zookeeper:3.9.3'
+    image: zookeeper:3.9.3
+    networks:
+      - ch_learning_net
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOOKEEPER_CLIENT_PORT=2181
+      - TZ="Europe/Moscow"
+    ports:
+      - "2182:2181"
+      - "2888:2888"
+      - "3888:3888"
+
+  click1:
+    <<: *ch-default-configs
+    volumes:
+      - ./configs/default_user.xml:/etc/clickhouse-server/users.d/default_user.xml
+      - ./configs/z_config.xml:/etc/clickhouse-server/config.d/z_config.xml
+      - ./configs/macros_ch1.xml:/etc/clickhouse-server/config.d/macros.xml
+      - ./data:/var/lib/clickhouse/user_files/data
+    ports:
+      - "8002:9000"
+      - "9123:8123"
+      
+  click2:
+    <<: *ch-default-configs
+    volumes:
+      - ./configs/default_user.xml:/etc/clickhouse-server/users.d/default_user.xml
+      - ./configs/z_config.xml:/etc/clickhouse-server/config.d/z_config.xml
+      - ./configs/macros_ch2.xml:/etc/clickhouse-server/config.d/macros.xml
+      - ./data:/var/lib/clickhouse/user_files/data
+    ports:
+      - "8003:9000"
+      - "9124:8123"
+      
+  click3:
+    <<: *ch-default-configs
+    volumes:
+      - ./configs/default_user.xml:/etc/clickhouse-server/users.d/default_user.xml
+      - ./configs/z_config.xml:/etc/clickhouse-server/config.d/z_config.xml
+      - ./configs/macros_ch3.xml:/etc/clickhouse-server/config.d/macros.xml
+      - ./data:/var/lib/clickhouse/user_files/data
+    ports:
+      - "8004:9000"
+      - "9125:8123"
+
+  click4:
+    <<: *ch-default-configs
+    volumes:
+      - ./configs/default_user.xml:/etc/clickhouse-server/users.d/default_user.xml
+      - ./configs/z_config.xml:/etc/clickhouse-server/config.d/z_config.xml
+      - ./configs/macros_ch4.xml:/etc/clickhouse-server/config.d/macros.xml
+      - ./data:/var/lib/clickhouse/user_files/data
+    ports:
+      - "8005:9000"
+      - "9126:8123"
+
+  haproxy:
+    image: haproxy:3.1.7
+    networks:
+      - ch_learning_net
+    ports:
+      - "9001:9000"  
+      - "8124:8123"  # HTTP порт для ClickHouse c балансировкой
+    volumes:
+      - ./configs/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    depends_on:
+      - click1
+      - click2
+      - click3
+      - click4
+    restart: unless-stopped
+
+networks:
+  ch_learning_net:
+    driver: bridge
+
+# volumes:

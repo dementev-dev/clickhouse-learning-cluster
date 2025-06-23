@@ -1,0 +1,48 @@
+<clickhouse>
+    <remote_servers replace="true">
+        <!-- 1 shards 4 replicas -->
+        <c1sh4rep>
+            <shard>
+                <internal_replication>true</internal_replication>
+                <replica><host>click1</host><port>9000</port><user>default</user><password>123456</password></replica>
+                <replica><host>click2</host><port>9000</port><user>default</user><password>123456</password></replica>
+                <replica><host>click3</host><port>9000</port><user>default</user><password>123456</password></replica>
+                <replica><host>click4</host><port>9000</port><user>default</user><password>123456</password></replica>
+            </shard>
+        </c1sh4rep>
+        <!-- 4 shards 1 replicas -->
+        <c4sh1rep>
+            <shard>
+                <replica><host>click1</host><port>9000</port><user>default</user><password>123456</password></replica>
+            </shard>
+            <shard>
+                <replica><host>click2</host><port>9000</port><user>default</user><password>123456</password></replica>
+            </shard>
+            <shard>
+                <replica><host>click3</host><port>9000</port><user>default</user><password>123456</password></replica>
+            </shard>
+            <shard>
+                <replica><host>click4</host><port>9000</port><user>default</user><password>123456</password></replica>
+            </shard>
+        </c4sh1rep>
+        <!-- 2 shards 2 replicas -->
+        <c2sh2rep>
+            <shard>
+                <internal_replication>true</internal_replication>
+                <replica><host>click1</host><port>9000</port><user>default</user><password>123456</password></replica>
+                <replica><host>click2</host><port>9000</port><user>default</user><password>123456</password></replica>
+            </shard>
+            <shard>
+                <internal_replication>true</internal_replication>
+                <replica><host>click3</host><port>9000</port><user>default</user><password>123456</password></replica>
+                <replica><host>click4</host><port>9000</port><user>default</user><password>123456</password></replica>
+            </shard>
+        </c2sh2rep>
+    </remote_servers>
+    <zookeeper>
+    <node index="1">
+        <host>zookeeper</host>
+        <port>2181</port>
+    </node>  
+    </zookeeper>
+</clickhouse>
