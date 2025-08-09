@@ -56,7 +56,7 @@ git clone https://github.com/dementev-dev/clickhouse-learning-cluster
 cd clickhouse-learning-cluster
 
 # Запускаем кластер
-docker compose up -d
+docker compose up
 
 # Проверяем статус
 docker compose ps
@@ -140,35 +140,46 @@ ENGINE = Distributed(c2sh2rep, default, user_scores_local, user_id);
 -- Генерируем тестовые данные
 INSERT INTO user_scores
 SELECT
-    number % 100000 + 1                AS user_id,
-    toFloat32(rand() % 50 + rand() % 50) / 10 AS avg_score,
-    now() - (number * 86400 / 1000)    AS created_at
-FROM numbers(100000);
+    number % 10000000 + 1                                AS user_id,
+    toFloat32(rand() % 50 + rand() % 50) / 10          AS avg_score,
+    now() - (number * 86400 / 1000)                    AS created_at
+FROM numbers(10000000);
 
 -- Проверяем распределение данных по шардам
-SELECT
-  _shard_num AS shard_num,
-  hostName() AS host,
-  count()    AS rows
-FROM clusterAllReplicas('c2sh2rep', 'default', 'user_scores_local')
-GROUP BY _shard_num, host
-ORDER BY _shard_num, host;
+SELECT 
+    shardNum() AS shard_id,
+    count() AS rows_per_shard
+FROM user_scores
+GROUP BY shard_id
+ORDER BY shard_id;
 ```
 
 ### Мониторинг репликации
 
 ```sql
 -- Состояние репликационных очередей
-SELECT 
-    database,
-    table,
-    replica_name,
-    total_replicas,
-    active_replicas
-FROM system.replicas;
+SELECT
+  hostName() AS host,
+  database,
+  table,
+  replica_name,
+  total_replicas,
+  active_replicas,
+  is_leader,
+  is_readonly
+FROM clusterAllReplicas('c2sh2rep', 'system', 'replicas')
+ORDER BY host, table;
 
 -- Лог репликации
-SELECT * FROM system.replication_queue LIMIT 10;
+SELECT
+  hostName() AS host,
+  event_time,
+  table,
+  event_type,              -- NewPart / MergeParts / DownloadPart и т.д.
+  part_name                -- имя парты (универсальное поле)
+FROM clusterAllReplicas('c2sh2rep', 'system', 'part_log')
+ORDER BY event_time DESC
+LIMIT 100;
 ```
 
 ## 🛠️ Структура проекта
